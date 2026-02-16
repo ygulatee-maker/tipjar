@@ -32,6 +32,39 @@ contract tips {
         require(msg.sender == owner, "Only owner can call");
         _;
     }
+ function _transferFunds(address payable recipient, uint amount) internal {
+        (bool success, ) = payable(recipient).call{value: amount}("");
+        require(success, "Transfer failed.");  
+    }
+function distributeBalance() public {
+        require(address(this).balance > 0, "No Money");
+        if(waitress.length >= 1){
+            uint totalamount = address(this).balance;
+            for(uint j=0; j<waitress.length; j++){
+                // Calculate share
+                uint distributeAmount = totalamount * waitress[j].percent / 100;
+                // Send money
+                _transferFunds(waitress[j].walletAddress, distributeAmount);
+            }
+        }
+    }
+
+       
+        function removeWaitress(address walletAddress) public onlyOwner {
+        if(waitress.length >= 1){
+            for(uint i=0; i<waitress.length; i++){
+                if(waitress[i].walletAddress == walletAddress){
+                    // Shift elements left
+                    for (uint j = i; j < waitress.length - 1; j++) {
+                        waitress[j] = waitress[j + 1];
+                    }
+                    waitress.pop(); 
+                    break;
+                }
+            }
+        }
+    }
+
 
     function addWaitress(address payable walletAddress, string memory name, uint percent) public onlyOwner {
         bool waitressExist = false;
